@@ -1,154 +1,138 @@
-import board
 from neopixel import NeoPixelBackground
+
+# SPDX-FileCopyrightText: 2020 Jeff Epler for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT
+
 import random
-from time import sleep
+import time
 
-# Options
-ROUND_WORLD = True   # if True object can move around edges, if False edge is treated as an empty cell
-USE_USER_SEED = False   # if True USER_SEED will be used to settle cells on world map, if False random seed will be generated
-USER_SEED = 553443   # seed for the initial colony of cells
-SIZE_OF_INITIAL_COLONY = 0.4   # where 1 is the whole map
-UPDATE_DELAY = 0#.5   # additional delay between population updates
+import board
+import displayio
+import framebufferio
+import rgbmatrix
 
-# Constants
-WORLD_WIDTH = 16   # number of cells horizontally
-WORLD_HEIGHT = 16   # number of cells vertically
-CELL_SIZE = 1   # side of single cell in pixels
-CENTER_X = int(WORLD_WIDTH / 2)
-CENTER_Y = int(WORLD_HEIGHT / 2)
+displayio.release_displays()
 
-COLOURS = [
-    (0,0,0),
-    (0,0,0),
-    (0,0,0),
-    (255,0,0),
-    (64,0,0),
-    (80,0,0),
-    (96,0,0),
-    (112,0,0),
-    (128,0,0),
-]
+# Conway's "Game of Life" is played on a grid with simple rules, based
+# on the number of filled neighbors each cell has and whether the cell itself
+# is filled.
+#   * If the cell is filled, and 2 or 3 neighbors are filled, the cell stays
+#     filled
+#   * If the cell is empty, and exactly 3 neighbors are filled, a new cell
+#     becomes filled
+#   * Otherwise, the cell becomes or remains empty
+#
+# The complicated way that the "m1" (minus 1) and "p1" (plus one) offsets are
+# calculated is due to the way the grid "wraps around", with the left and right
+# sides being connected, as well as the top and bottom sides being connected.
+#
+# This function has been somewhat optimized, so that when it indexes the bitmap
+# a single number [x + width * y] is used instead of indexing with [x, y].
+# This makes the animation run faster with some loss of clarity. More
+# optimizations are probably possible.
 
-# Variables
-cells = []   # array where Cell objects will be stored
 
-class Cell:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.live = False
-        self.live_neighbours = 0
+def apply_life_rule(old, new):
+    width = old.width
+    height = old.height
+    for y in range(height):
+        yyy = y * width
+        y_m1 = ((y + height - 1) % height) * width
+        y_p1 = ((y + 1) % height) * width
+        x_m1 = width - 1
+        for x in range(width):
+            xp1 = (x + 1) % width
+            neighbors = (
+                old[x_m1 + y_m1] + old[x_m1 + yyy] + old[x_m1 + y_p1] +
+                old[x    + y_m1] +                    old[x   + y_p1] +
+                old[xp1  + y_m1] + old[xp1 + yyy] +   old[xp1 + y_p1])
+            new[x+yyy] = neighbors == 3 or (neighbors == 2 and old[x+yyy])
+            x_m1 = x
 
-    def change_state(self):   # changes state of the cell to opposite
-        self.live = not self.live
+# Fill 'fraction' out of all the cells.
+def randomize(output, fraction=0.33):
+    for i in range(output.height * output.width):
+        output[i] = random.random() < fraction
 
-        #draw_cell(self.x, self.y, self.live_neighbours)
-        if self.live:
-            draw_cell(self.x, self.y, self.live_neighbours)
-        else:
-            draw_cell(self.x, self.y, 0)
 
-    def check_neighbours(self):
-        self.live_neighbours = 0
-        x_to_check = [self.x]
-        y_to_check = [self.y]
-        if ROUND_WORLD:
-            y_to_check.append((self.y - 1) % WORLD_HEIGHT)
-            y_to_check.append((self.y + 1) % WORLD_HEIGHT)
-            x_to_check.append((self.x - 1) % WORLD_WIDTH)
-            x_to_check.append((self.x + 1) % WORLD_WIDTH)
-        else:
-            if self.y > 0:   # if cell is in the row 0, it doesn't have neighbours above
-                y_to_check.append(self.y - 1)
-            if self.y < WORLD_HEIGHT - 1:   # if cell is in the lowest row, it doesn't have neighbours below
-                y_to_check.append(self.y + 1)
-            if self.x > 0:   # if cell is in the left column, it doesn't have neighbours from the left side
-                x_to_check.append(self.x - 1)
-            if self.x < WORLD_WIDTH - 1:   # if cell is in the right column, it doesn't have neighbours from the right side
-                x_to_check.append(self.x + 1)
-        for y in y_to_check:
-            for x in x_to_check:
-                if y != self.y or x != self.x:
-                    if cells[x][y].live == True:
-                        self.live_neighbours += 1
+# Fill the grid with a tribute to John Conway
+def conway(output):
+    # based on xkcd's tribute to John Conway (1937-2020) https://xkcd.com/2293/
+    conway_data = [
+        b'  +++   ',
+        b'  + +   ',
+        b'  + +   ',
+        b'   +    ',
+        b'+ +++   ',
+        b' + + +  ',
+        b'   +  + ',
+        b'  + +   ',
+        b'  + +   ',
+    ]
+    for i in range(output.height * output.width):
+        output[i] = 0
+    for i, si in enumerate(conway_data):
+        y = output.height - len(conway_data) - 2 + i
+        for j, cj in enumerate(si):
+            output[(output.width - 8)//2 + j, y] = cj & 1
 
-    def check_rules(self):
-        if self.live == True:
-            if self.live_neighbours < 2 or self.live_neighbours > 3:
-                self.change_state()
-        if self.live == False and self.live_neighbours == 3:
-            self.change_state()
+# bit_depth=1 is used here because we only use primary colors, and it makes
+# the animation run a bit faster because RGBMatrix isn't taking over the CPU
+# as often.
+#matrix = rgbmatrix.RGBMatrix(
+#    width=64, height=32, bit_depth=1,
+#    rgb_pins=[board.D6, board.D5, board.D9, board.D11, board.D10, board.D12],
+#    addr_pins=[board.A5, board.A4, board.A3, board.A2],
+#    clock_pin=board.D13, latch_pin=board.D0, output_enable_pin=board.D1)
+#display = framebufferio.FramebufferDisplay(matrix, auto_refresh=False)
 
-# Helper function used to draw single cell
-def draw_cell(x, y, colour):
-    for x_value in range(x * CELL_SIZE, x * CELL_SIZE + CELL_SIZE):
-        for y_value in range(y * CELL_SIZE, y * CELL_SIZE + CELL_SIZE):
-            print("writing to x:", x_value, "y:", y_value, "index:", (y_value-1) * 16 + (x_value-1), "color:", colour)
-            pixels[(y_value-1) * 16 + (x_value-1)] = COLOURS[colour]
 
-def checksum():
-     global cells
-     sum = 0
-     for index_x, y in enumerate(cells):
-         for index_y, cell in enumerate(y):
-             if cell.live:
-                 sum += cell.x + cell.y * 16
-     return sum  
-
-# Create world filled with dead cells
-def create_world():
-    global cells
-    for x in range(0, WORLD_WIDTH):
-        cells.append([])
-        for y in range(0, WORLD_HEIGHT):
-            cells[x].append(Cell(x, y))
-
-# Randomize initial state
-def seed_world():
-    global cells
-    randomized_seed = ''
-    if USE_USER_SEED:
-        print("User seed used: ", USER_SEED)
-        random.seed(USER_SEED)
-    else:
-        for counter in range(0, 6):
-            randomized_seed += str(random.randrange(0, 10))
-        print("Seed used: ", randomized_seed)
-        random.seed(int(randomized_seed))
-    for y in range(int(CENTER_Y - SIZE_OF_INITIAL_COLONY * CENTER_Y),
-                   int(CENTER_Y + SIZE_OF_INITIAL_COLONY * CENTER_Y)):
-        for x in range(int(CENTER_X - SIZE_OF_INITIAL_COLONY * CENTER_X),
-                       int(CENTER_X + SIZE_OF_INITIAL_COLONY * CENTER_X)):
-            finger_of_god = random.randrange(0, 2)
-            if finger_of_god == 1:
-                cells[x][y].change_state()
-
-# Helper function used to update state of the colony
-def update_colony():
-    for row in cells:
-        for cell in row:
-            cell.check_neighbours()
-    for row in cells:
-        for cell in row:
-            cell.check_rules()
-
-# Run the simulation
 NEOPIXEL = board.GP22
 NUM_PIXELS = 256
+pixels = NeoPixelBackground(NEOPIXEL, NUM_PIXELS, brightness=0.1, auto_write=False)
+#display = framebufferio.FramebufferDisplay(pixels, auto_refresh=False)
+WIDTH = 16
+HEIGHT = 16
 
-pixels = NeoPixelBackground(NEOPIXEL, NUM_PIXELS, brightness=0.1, auto_write=True)
 
-create_world()
-seed_world()
-old_sum=0
-older_sum=0
+SCALE = 1
+b1 = displayio.Bitmap(WIDTH//SCALE, HEIGHT//SCALE, 2)
+b2 = displayio.Bitmap(WIDTH//SCALE, HEIGHT//SCALE, 2)
+palette = displayio.Palette(2)
+tg1 = displayio.TileGrid(b1, pixel_shader=palette)
+tg2 = displayio.TileGrid(b2, pixel_shader=palette)
+g1 = displayio.Group(scale=SCALE)
+g1.append(tg1)
+display.show(g1)
+g2 = displayio.Group(scale=SCALE)
+g2.append(tg2)
+
+# First time, show the Conway tribute
+palette[1] = 0xffffff
+conway(b1)
+display.auto_refresh = True
+time.sleep(3)
+n = 40
+
 while True:
-    update_colony()
-    sleep(UPDATE_DELAY)
-    sum = checksum()
-    if old_sum == sum or older_sum == sum:
-        print("reseed")
-        seed_world()
-    older_sum = old_sum
-    old_sum = checksum()
-   
+    # run 2*n generations.
+    # For the Conway tribute on 64x32, 80 frames is appropriate.  For random
+    # values, 400 frames seems like a good number.  Working in this way, with
+    # two bitmaps, reduces copying data and makes the animation a bit faster
+    for _ in range(n):
+        display.show(g1)
+        apply_life_rule(b1, b2)
+        display.show(g2)
+        apply_life_rule(b2, b1)
+
+    # After 2*n generations, fill the board with random values and
+    # start over with a new color.
+    randomize(b1)
+    # Pick a random color out of 6 primary colors or white.
+    palette[1] = (
+        (0x0000ff if random.random() > .33 else 0) |
+        (0x00ff00 if random.random() > .33 else 0) |
+        (0xff0000 if random.random() > .33 else 0)) or 0xffffff
+    n = 200
+
