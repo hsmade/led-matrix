@@ -8,7 +8,7 @@ ROUND_WORLD = True  # if True object can move around edges, if False edge is tre
 USE_USER_SEED = False  # if True USER_SEED will be used to settle cells on world map, if False random seed will be generated
 USER_SEED = 553443  # seed for the initial colony of cells
 SIZE_OF_INITIAL_COLONY = 0.4  # where 1 is the whole map
-UPDATE_DELAY = 0  # .5   # additional delay between population updates
+UPDATE_DELAY = 0.2   # additional delay between population updates
 
 # Constants
 WORLD_WIDTH = 16  # number of cells horizontally
