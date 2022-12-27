@@ -4,11 +4,11 @@ import random
 from time import sleep
 
 # Options
-ROUND_WORLD = True  # if True object can move around edges, if False edge is treated as an empty cell
+ROUND_WORLD = False  # if True object can move around edges, if False edge is treated as an empty cell
 USE_USER_SEED = False  # if True USER_SEED will be used to settle cells on world map, if False random seed will be generated
-USER_SEED = 553443  # seed for the initial colony of cells
+USER_SEED = 27  # seed for the initial colony of cells
 SIZE_OF_INITIAL_COLONY = 0.4  # where 1 is the whole map
-UPDATE_DELAY = 0.2   # additional delay between population updates
+UPDATE_DELAY = 0.2  # additional delay between population updates
 
 # Constants
 WORLD_WIDTH = 16  # number of cells horizontally
@@ -18,26 +18,19 @@ CENTER_X = int(WORLD_WIDTH / 2)
 CENTER_Y = int(WORLD_HEIGHT / 2)
 
 COLOURS = [
-    (8, 0, 0),
-    (16, 0, 0),
-    (32, 0, 0),
-    (48, 0, 0),
-    (64, 0, 0),
-    (80, 0, 0),
-    (96, 0, 0),
-    (112, 0, 0),
-    (128, 0, 0),
-    (144, 0, 0),
-    (160, 0, 0),
-    (176, 0, 0),
-    (192, 0, 0),
-    (208, 0, 0),
-    (224, 0, 0),
-    (240, 0, 0),
+    (0, 0, 0),
+    (0, 150, 0),
+    (100, 200, 0),
+    # (150, 255, 0),
+    (200, 200, 0),
+    # (255, 255, 0),
+    (255, 200, 0),
+    # (255, 150, 0),
+    (255, 100, 0),
     (255, 0, 0),
 ]
 
-MAX_AGE = 10
+MAX_AGE = len(COLOURS) - 1
 
 # Variables
 cells = []  # array where Cell objects will be stored
@@ -50,17 +43,6 @@ class Cell:
         self.live = False
         self.live_neighbours = 0
         self.age = 0
-
-    def change_state(self):  # changes state of the cell to opposite
-        self.live = not self.live
-
-        # draw_cell(self.x, self.y, self.live_neighbours)
-        if self.live:
-            self.age += 1
-            # draw_cell(self.x, self.y, 1)
-            draw_cell(self.x, self.y, self.age)
-        else:
-            draw_cell(self.x, self.y, 0)
 
     def check_neighbours(self):
         self.live_neighbours = 0
@@ -83,15 +65,29 @@ class Cell:
         for y in y_to_check:
             for x in x_to_check:
                 if y != self.y or x != self.x:
-                    if cells[x][y].live == True:
+                    if cells[x][y].live:
                         self.live_neighbours += 1
 
-    def check_rules(self):
-        if self.live == True:
+    def change_state(self):  # changes state of the cell to opposite
+        self.live = not self.live
+
+    def apply_rules(self):
+        if self.live:
             if self.live_neighbours < 2 or self.live_neighbours > 3:
                 self.change_state()
-        if self.live == False and self.live_neighbours == 3:
+        if not self.live and self.live_neighbours == 3:
             self.change_state()
+
+        if self.live:
+            self.age += 1
+            if self.age > 6:
+                self.age = 6
+            draw_cell(self.x, self.y, self.age)
+        else:
+            self.age -= 1
+            if self.age < 0:
+                self.age = 0
+            draw_cell(self.x, self.y, 0)
 
 
 # Helper function used to draw single cell
@@ -103,9 +99,9 @@ def draw_cell(x, y, colour):
             #       colour)
             if colour > MAX_AGE:
                 MAX_AGE = colour
-            colour = int(colour / MAX_AGE * 10)
+            colour = int(colour / MAX_AGE * MAX_AGE)
             # print("    weighted color:", colour, "max:", MAX_AGE)
-            pixels[(y_value - 1) * 16 + (x_value - 1)] = COLOURS[colour]
+            pixels[(y_value - 1) * WORLD_WIDTH + (x_value - 1)] = COLOURS[colour]
 
 
 def checksum():
@@ -146,6 +142,8 @@ def seed_world():
             finger_of_god = random.randrange(0, 2)
             if finger_of_god == 1:
                 cells[x][y].change_state()
+            if cells[x][y].live:
+                draw_cell(x, y, MAX_AGE)
 
 
 # Helper function used to update state of the colony
@@ -155,7 +153,7 @@ def update_colony():
             cell.check_neighbours()
     for row in cells:
         for cell in row:
-            cell.check_rules()
+            cell.apply_rules()
 
 
 # Run the simulation
@@ -166,8 +164,16 @@ pixels = NeoPixelBackground(NEOPIXEL, NUM_PIXELS, brightness=0.1, auto_write=Tru
 
 create_world()
 seed_world()
+# sleep(2)
 old_sum = 0
 older_sum = 0
+
+# for i in range(100):
+#     USER_SEED = i
+#     seed_world()
+#     sleep(1)
+#     pixels.fill((0,0,0))
+
 while True:
     update_colony()
     sleep(UPDATE_DELAY)
