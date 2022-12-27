@@ -1,5 +1,5 @@
 import board
-from neopixel import NeoPixelBackground
+from neopixel import Display, Color
 import random
 from time import sleep
 
@@ -18,16 +18,16 @@ CENTER_X = int(WORLD_WIDTH / 2)
 CENTER_Y = int(WORLD_HEIGHT / 2)
 
 COLOURS = [
-    (0, 0, 0),
-    (0, 150, 0),
-    (100, 200, 0),
-    # (150, 255, 0),
-    (200, 200, 0),
-    # (255, 255, 0),
-    (255, 200, 0),
-    # (255, 150, 0),
-    (255, 100, 0),
-    (255, 0, 0),
+    Color(0, 0, 0),
+    Color(0, 150, 0),
+    Color(100, 200, 0),
+    # Color(150, 255, 0),
+    Color(200, 200, 0),
+    # Color(255, 255, 0),
+    Color(255, 200, 0),
+    # Color(255, 150, 0),
+    Color(255, 100, 0),
+    Color(255, 0, 0),
 ]
 
 MAX_AGE = len(COLOURS) - 1
@@ -101,7 +101,8 @@ def draw_cell(x, y, colour):
                 MAX_AGE = colour
             colour = int(colour / MAX_AGE * MAX_AGE)
             # print("    weighted color:", colour, "max:", MAX_AGE)
-            pixels[(y_value - 1) * WORLD_WIDTH + (x_value - 1)] = COLOURS[colour]
+            display.set_pixel(x, y, COLOURS[colour])
+            # pixels[(y_value - 1) * WORLD_WIDTH + (x_value - 1)] = COLOURS[colour]
 
 
 def checksum():
@@ -154,13 +155,16 @@ def update_colony():
     for row in cells:
         for cell in row:
             cell.apply_rules()
+    display.draw()
+
 
 
 # Run the simulation
 NEOPIXEL = board.GP22
-NUM_PIXELS = 256
+# NUM_PIXELS = 256
 
-pixels = NeoPixelBackground(NEOPIXEL, NUM_PIXELS, brightness=0.1, auto_write=True)
+# pixels = NeoPixelBackground(NEOPIXEL, NUM_PIXELS, brightness=0.1, auto_write=True)
+display = Display(board.GP22, 16, 16, auto_write=False)
 
 create_world()
 seed_world()
@@ -173,6 +177,16 @@ older_sum = 0
 #     seed_world()
 #     sleep(1)
 #     pixels.fill((0,0,0))
+
+
+def reset():
+    display.clear()
+    for x in range(WORLD_WIDTH):
+        for y in range(WORLD_HEIGHT):
+            cells[x][y].live = False
+            cells[x][y].age = 0
+            cells[x][y].live_neighbours = 0
+
 
 while True:
     update_colony()
@@ -187,6 +201,7 @@ while True:
         #         cell.live_neighbours = 0
 
         sleep(2)
+        reset()
         seed_world()
     older_sum = old_sum
     old_sum = checksum()

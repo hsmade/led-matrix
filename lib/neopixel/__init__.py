@@ -26,6 +26,7 @@ import struct
 import adafruit_pixelbuf
 from rp2pio import StateMachine
 from adafruit_pioasm import Program
+import time
 
 # Pixel color order constants
 RGB = "RGB"
@@ -70,7 +71,7 @@ class NeoPixelBackground(  # pylint: disable=too-few-public-methods
     adafruit_pixelbuf.PixelBuf
 ):
     def __init__(
-        self, pin, n, *, bpp=3, brightness=1.0, auto_write=True, pixel_order=None
+            self, pin, n, *, bpp=3, brightness=1.0, auto_write=True, pixel_order=None
     ):
         if not pixel_order:
             pixel_order = GRB if bpp == 3 else GRBW
@@ -132,3 +133,54 @@ class NeoPixelBackground(  # pylint: disable=too-few-public-methods
             self._sm.background_write(memoryview(buf).cast("L"), swap=True)
 
 
+class Color:
+    red = 0
+    green = 0
+    blue = 0
+
+    def __init__(self, red, green, blue):
+        self.red = red
+        self.green = green
+        self.blue = blue
+
+    def get(self):
+        return self.red, self.green, self.blue
+
+
+class Display:
+    def __init__(self, pin, width: int, height: int, auto_write=False):
+        self.width = width
+        self.height = height
+        self.__auto_write = auto_write
+        self.__pixels = NeoPixelBackground(pin, width * height, brightness=0.1, auto_write=auto_write)
+
+    def set_pixel(self, x: int, y: int, color: Color):
+        if x % 2:
+            # print("!set x:", x, "y:", y, "index:", (self.height - y) + x * self.height, "to:", color.get())
+            self.__pixels[(self.height - (y + 1)) + x * self.height] = color.get()
+        else:
+            # print("set x:", x, "y:", y, "index:", x + y * self.width, "to:", color.get())
+            self.__pixels[y + x * self.height] = color.get()
+
+    def draw(self):
+        self.__pixels.show()
+        time.sleep(self.height * self.width / 32000)
+
+    def clear(self):
+        self.__pixels.fill((0, 0, 0))
+        if not self.__auto_write:
+            self.draw()
+
+
+if __name__ == '__main__':
+    import board
+
+    display = Display(board.GP22, 16, 16, auto_write=False)
+
+    for i in range(16):
+        display.set_pixel(i, i, Color(32, 0, 0))
+    display.draw()
+
+    for i in range(16):
+        display.set_pixel(i, 15 - i, Color(0, 0, 32))
+    display.draw()
