@@ -8,7 +8,7 @@ ROUND_WORLD = False  # if True object can move around edges, if False edge is tr
 USE_USER_SEED = False  # if True USER_SEED will be used to settle cells on world map, if False random seed will be generated
 USER_SEED = 27  # seed for the initial colony of cells
 SIZE_OF_INITIAL_COLONY = 0.4  # where 1 is the whole map
-UPDATE_DELAY = 0.2  # additional delay between population updates
+UPDATE_DELAY = 0  # 0.2  # additional delay between population updates
 
 # Constants
 WORLD_WIDTH = 16  # number of cells horizontally
@@ -156,27 +156,7 @@ def update_colony():
         for cell in row:
             cell.apply_rules()
     display.draw()
-
-
-
-# Run the simulation
-NEOPIXEL = board.GP22
-# NUM_PIXELS = 256
-
-# pixels = NeoPixelBackground(NEOPIXEL, NUM_PIXELS, brightness=0.1, auto_write=True)
-display = Display(board.GP22, 16, 16, auto_write=False)
-
-create_world()
-seed_world()
-# sleep(2)
-old_sum = 0
-older_sum = 0
-
-# for i in range(100):
-#     USER_SEED = i
-#     seed_world()
-#     sleep(1)
-#     pixels.fill((0,0,0))
+    # display.print(color=False)
 
 
 def reset():
@@ -188,20 +168,22 @@ def reset():
             cells[x][y].live_neighbours = 0
 
 
-while True:
-    update_colony()
-    sleep(UPDATE_DELAY)
-    sum = checksum()
-    if old_sum == sum or older_sum == sum:
-        print("reseed")
-        # for _, row in enumerate(cells):
-        #     for _, cell in enumerate(row):
-        #         cell.live = False
-        #         cell.age = 0
-        #         cell.live_neighbours = 0
+if __name__ == '__main__':
+    display = Display(board.GP22, 16, 16, auto_write=False)
 
-        sleep(2)
-        reset()
-        seed_world()
-    older_sum = old_sum
-    old_sum = checksum()
+    create_world()
+    seed_world()
+    old_sum = 0
+    older_sum = 0
+
+    while True:
+        update_colony()
+        sleep(UPDATE_DELAY)
+        current_sum = checksum()
+        if old_sum == current_sum or older_sum == current_sum:
+            print("reseed")
+            sleep(1)
+            reset()
+            seed_world()
+        older_sum = old_sum
+        old_sum = checksum()
