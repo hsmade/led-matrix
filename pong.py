@@ -2,6 +2,9 @@ from neopixel import Display, Color
 import random
 from time import sleep
 
+STOP = False
+POLL = None
+
 
 class Ball:
     x = 0
@@ -42,8 +45,8 @@ class Ball:
         self.__display.set_pixel(self.x, self.y, Color(0, 0, 0))
 
     def bounce(self):
-        ball.right = not ball.right
-        ball.up = not ball.up
+        self.right = not self.right
+        self.up = not self.up
 
 
 class Bar:
@@ -96,7 +99,7 @@ class Bar:
             sleep(0.3)
 
 
-if __name__ == '__main__':
+def main():
     import board
     display = Display(board.GP22, 16, 16, auto_write=False)
 
@@ -105,6 +108,12 @@ if __name__ == '__main__':
     ball = Ball(display=display, color=Color(32, 0, 32))
 
     while True:
+        if STOP:
+            display.stop()
+            return
+        if POLL:
+            POLL()
+
         bar_left.move(ball)
         bar_right.move(ball)
         ball.move()
@@ -130,3 +139,12 @@ if __name__ == '__main__':
         display.draw()
         sleep(0.08)
         # display.print(color=False)
+
+
+def set_poll(poll):
+    global POLL
+    POLL = poll
+
+
+if __name__ == '__main__':
+    main()

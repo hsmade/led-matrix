@@ -34,6 +34,9 @@ MAX_AGE = len(COLOURS) - 1
 
 # Variables
 cells = []  # array where Cell objects will be stored
+display = None
+STOP = False
+POLL = None
 
 
 class Cell:
@@ -168,7 +171,8 @@ def reset():
             cells[x][y].live_neighbours = 0
 
 
-if __name__ == '__main__':
+def main():
+    global display
     display = Display(board.GP22, 16, 16, auto_write=False)
 
     create_world()
@@ -177,6 +181,12 @@ if __name__ == '__main__':
     older_sum = 0
 
     while True:
+        if STOP:
+            display.stop()
+            return
+        if POLL:
+            POLL()
+
         update_colony()
         sleep(UPDATE_DELAY)
         current_sum = checksum()
@@ -187,3 +197,12 @@ if __name__ == '__main__':
             seed_world()
         older_sum = old_sum
         old_sum = checksum()
+
+
+def set_poll(poll):
+    global POLL
+    POLL = poll
+
+
+if __name__ == '__main__':
+    main()
