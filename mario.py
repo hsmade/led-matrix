@@ -72,9 +72,9 @@ FRAME3 = [
 
 
 def show(display, frame):
-    for y in range(16):
-        for x in range(16):
-            display.set_pixel(x, y, frame[x][y])
+    for x in range(16):
+        for y in range(16):
+            display.set_pixel(x, y, frame[y][x])
     display.draw()
 
 
@@ -84,9 +84,7 @@ def main():
         if STOP:
             display.stop()
             return
-        print("poll:", POLL)
         if POLL:
-            print("calling poll")
             POLL()
 
         show(display, FRAME1)
