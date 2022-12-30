@@ -2,6 +2,7 @@ import webserver
 import game_of_life
 import pong
 import mario
+import eyes
 from neopixel import Display
 import board
 
@@ -12,6 +13,7 @@ if __name__ == '__main__':
         "game": game_of_life.GameOfLife,
         "pong": pong.Pong,
         "mario": mario.Mario,
+        "eyes": eyes.Eyes,
     }
 
     def callback(request):

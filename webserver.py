@@ -51,6 +51,7 @@ def webpage():
         <li><form method="POST"><input name="game" type="hidden"/><button type="submit">game</button></form></li>
         <li><form method="POST"><input name="pong" type="hidden"/><button type="submit">pong</button></form></li>
         <li><form method="POST"><input name="mario" type="hidden"/><button type="submit">mario</button></form></li>
+        <li><form method="POST"><input name="eyes" type="hidden"/><button type="submit">eyes</button></form></li>
     </ul>
     </body>
     </html>
