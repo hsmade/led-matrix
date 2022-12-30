@@ -1,9 +1,7 @@
-from neopixel import Display, Color
+from neopixel import Color
 import random
 from time import sleep
-
-STOP = False
-POLL = None
+from scene import Scene
 
 
 class Ball:
@@ -81,14 +79,6 @@ class Bar:
     def touches(self, ball: Ball):
         return self.y-1 <= ball.y <= (self.y + (self.size - 1))
 
-    #
-    #
-    # ! self.y
-    # !
-    # ! self.y + self.size - 1
-    #
-    #
-
     def blink(self):
         for _ in range(2):
             self._draw(True)
@@ -99,52 +89,32 @@ class Bar:
             sleep(0.3)
 
 
-def main():
-    import board
-    display = Display(board.GP22, 16, 16, auto_write=False)
+class Pong(Scene):
+    def __init__(self, display):
+        super.__init__(display=display)
+        self.bar_left = Bar(display=self._display, x=0, color=Color(32, 0, 0))
+        self.bar_right = Bar(display=self._display, x=15, color=Color(0, 32, 0))
+        self.ball = Ball(display=self._display, color=Color(32, 0, 32))
 
-    bar_left = Bar(display=display, x=0, color=Color(32, 0, 0))
-    bar_right = Bar(display=display, x=15, color=Color(0, 32, 0))
-    ball = Ball(display=display, color=Color(32, 0, 32))
+    def iter(self):
+        self.bar_left.move(self.ball)
+        self.bar_right.move(self.ball)
+        self.ball.move()
 
-    while True:
-        if STOP:
-            display.stop()
-            return
-        if POLL:
-            POLL()
-
-        bar_left.move(ball)
-        bar_right.move(ball)
-        ball.move()
-        # print("ball:", ball.x, ball.y)
-        # print("left:", bar_left.x)
-        # print("right:", bar_right.x)
-
-        if ball.x == 1 or ball.x == 14:
+        if self.ball.x == 1 or self.ball.x == 14:
             # print("touch?")
-            if bar_left.touches(ball) or bar_right.touches(ball):
+            if self.bar_left.touches(self.ball) or self.bar_right.touches(self.ball):
                 # print("touched!")
-                ball.bounce()
+                self.ball.bounce()
 
-        if ball.x == 0:
-            bar_left.blink()
-            ball.clear()
-            ball.reset()
-        if ball.x == 15:
-            bar_right.blink()
-            ball.clear()
-            ball.reset()
+        if self.ball.x == 0:
+            self.bar_left.blink()
+            self.ball.clear()
+            self.ball.reset()
+        if self.ball.x == 15:
+            self.bar_right.blink()
+            self.ball.clear()
+            self.ball.reset()
 
-        display.draw()
+        self._display.draw()
         sleep(0.08)
-        # display.print(color=False)
-
-
-def set_poll(poll):
-    global POLL
-    POLL = poll
-
-
-if __name__ == '__main__':
-    main()

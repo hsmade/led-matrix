@@ -1,7 +1,7 @@
 import board
-from neopixel import Display, Color
+from neopixel import Color
 from time import sleep
-
+from scene import Scene
 
 RED = Color(32, 0, 0)
 BROWN = Color(28, 16, 0)
@@ -71,35 +71,17 @@ FRAME3 = [
 ]
 
 
-def show(display, frame):
-    for x in range(16):
-        for y in range(16):
-            display.set_pixel(x, y, frame[y][x])
-    display.draw()
+class Mario(Scene):
+    def show(self, frame):
+        for x in range(16):
+            for y in range(16):
+                self._display.set_pixel(x, y, frame[y][x])
+        self._display.draw()
 
-
-def main():
-    display = Display(board.GP22, 16, 16, auto_write=False)
-    while True:
-        if STOP:
-            display.stop()
-            return
-        if POLL:
-            POLL()
-
-        show(display, FRAME1)
+    def iter(self):
+        self.show(FRAME1)
         sleep(0.1)
-        show(display, FRAME2)
+        self.show(FRAME2)
         sleep(0.1)
-        show(display, FRAME3)
+        self.show(FRAME3)
         sleep(0.1)
-
-
-def set_poll(poll):
-    global POLL
-    POLL = poll
-
-
-if __name__ == '__main__':
-    main()
-
