@@ -79,23 +79,36 @@ class Cell:
 class GameOfLife(Scene):
     def __init__(self, display):
         super().__init__(display=display)
+        self.cells = []
+        self.sums = [0, 0, 0]
+        self.max_age = len(COLOURS) - 1
         self.create_world()
         self.seed_world()
-        self.sums = deque([0, 0, 0])
-        self.cells = []
-        self.max_age = len(COLOURS) - 1
 
     def iter(self):
         self.update_colony()
-        self.sums[0] = self.checksum()
+        self.update_checksum()
 
         # if we're stuck in a loop
-        if self.sums[0] in self.sums[1:2]:
+        if self.sums[0] != 0 and self.sums[0] in self.sums[1:2]:
+            print("stuck")
             sleep(1)
             self.reset()
-        self.sums.rotate(1)
+            self.seed_world()
+
+    def update_checksum(self):
+        checksum = 0
+        for index_x, y in enumerate(self.cells):
+            for index_y, cell in enumerate(y):
+                if cell.live:
+                    checksum += cell.x + cell.y * 16
+        self.sums[2] = self.sums[1]
+        self.sums[1] = self.sums[0]
+        self.sums[0] = checksum
 
     def reset(self):
+        print("resetting")
+        self.sums = [0, 0, 0]
         self._display.clear()
         for x in range(WORLD_WIDTH):
             for y in range(WORLD_HEIGHT):
@@ -134,14 +147,6 @@ class GameOfLife(Scene):
             self.cells.append([])
             for y in range(0, WORLD_HEIGHT):
                 self.cells[x].append(Cell(x, y, self.cells))
-
-    def checksum(self):
-        result = 0
-        for index_x, y in enumerate(self.cells):
-            for index_y, cell in enumerate(y):
-                if cell.live:
-                    result += cell.x + cell.y * 16
-        return result
 
     def draw_cell(self, x, y, colour):
         for x_value in range(x, x + 1):

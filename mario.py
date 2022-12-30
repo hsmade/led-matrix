@@ -79,6 +79,7 @@ class Mario(Scene):
         self._display.draw()
 
     def iter(self):
+        print("mario iter")
         self.show(FRAME1)
         sleep(0.1)
         self.show(FRAME2)

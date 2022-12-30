@@ -50,7 +50,7 @@ class Ball:
 class Bar:
     y = 0
 
-    def __init__(self, display: Display, x: int, size=3, color=Color(32, 32, 32)):
+    def __init__(self, display, x: int, size=3, color=Color(32, 32, 32)):
         self.__display = display
         self.color = color
         self.x = x
@@ -91,7 +91,7 @@ class Bar:
 
 class Pong(Scene):
     def __init__(self, display):
-        super.__init__(display=display)
+        super().__init__(display=display)
         self.bar_left = Bar(display=self._display, x=0, color=Color(32, 0, 0))
         self.bar_right = Bar(display=self._display, x=15, color=Color(0, 32, 0))
         self.ball = Ball(display=self._display, color=Color(32, 0, 32))

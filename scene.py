@@ -5,6 +5,7 @@ class Scene:
     def __init__(self, display: Display):
         # set the display allocation to use
         self._display = display
+        display.clear()
 
     def iter(self):
         """
