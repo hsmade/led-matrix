@@ -1,4 +1,3 @@
-import board
 from neopixel import Color
 from time import sleep
 from scene import Scene
@@ -9,8 +8,6 @@ LBLUE = Color(16, 16, 32)
 BROWN = Color(28, 16, 0)
 SKIN = Color(48, 32, 0)
 NONE = Color(0, 0, 0)
-STOP = False
-POLL = None
 
 FRAME1 = [
     [NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE],
@@ -84,7 +81,6 @@ class Eyes(Scene):
         self._display.draw()
 
     def iter(self):
-        print("eyes iter")
         self.show(FRAME1)
         sleep(2)
         # self.show(FRAME2)

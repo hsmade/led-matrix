@@ -23,7 +23,7 @@ def base(request):  # pylint: disable=unused-argument
 @server.route("/", "POST")
 def start_code(request):
     print("got POST on /")
-    raw_text = request.raw_request.decode("utf8")
+    raw_text = request.body.decode("utf8")
     if code_callback:
         code_callback(raw_text)
     return HTTPResponse(content_type="text/html", body=webpage())
@@ -52,6 +52,8 @@ def webpage():
         <li><form method="POST"><input name="pong" type="hidden"/><button type="submit">pong</button></form></li>
         <li><form method="POST"><input name="mario" type="hidden"/><button type="submit">mario</button></form></li>
         <li><form method="POST"><input name="eyes" type="hidden"/><button type="submit">eyes</button></form></li>
+        <li><form method="POST"><input name="pacman" type="hidden"/><button type="submit">pacman</button></form></li>
+        <li><form method="POST"><input name="cat" type="hidden"/><button type="submit">cat</button></form></li>
     </ul>
     </body>
     </html>
