@@ -1,6 +1,12 @@
 # LED matrix controller
 
 This software runs on a Raspberry Pico W, with [CircuitPython 8.0.0-beta.6](https://circuitpython.org/board/raspberry_pi_pico_w/).
+Other dependencies (included in `lib/`):
+ * https://github.com/adafruit/Adafruit_CircuitPython_HTTPServer
+ * https://github.com/adafruit/Adafruit_CircuitPython_PIOASM
+ * https://github.com/adafruit/Adafruit_CircuitPython_Pixelbuf
+ * https://github.com/adafruit/Adafruit_CircuitPython_Ticks
+ 
 
 Expects a `settings.toml` file like this:
 
