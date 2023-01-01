@@ -80,7 +80,7 @@ class GameOfLife(Scene):
     def __init__(self, display):
         super().__init__(display=display)
         self.cells = []
-        self.sums = [0, 0, 0]
+        self.sums = [None, None, None]
         self.max_age = len(COLOURS) - 1
         self.create_world()
         self.seed_world()
@@ -90,7 +90,7 @@ class GameOfLife(Scene):
         self.update_checksum()
 
         # if we're stuck in a loop
-        if self.sums[0] != 0 and self.sums[0] in self.sums[1:2]:
+        if self.sums[0] is not None and self.sums[0] in self.sums[1:2]:
             print("stuck")
             sleep(1)
             self.reset()
@@ -108,7 +108,7 @@ class GameOfLife(Scene):
 
     def reset(self):
         print("resetting")
-        self.sums = [0, 0, 0]
+        self.sums = [None, None, None]
         self._display.clear()
         for x in range(WORLD_WIDTH):
             for y in range(WORLD_HEIGHT):
