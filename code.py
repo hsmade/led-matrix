@@ -10,7 +10,6 @@ import board
 
 
 if __name__ == '__main__':
-    scene = None
     mapping = {
         "game": game_of_life.GameOfLife,
         "pong": pong.Pong,
@@ -19,7 +18,9 @@ if __name__ == '__main__':
         "pacman": pacman.PacMan,
         "cat": cat.Cat,
     }
-
+    display = Display(board.GP22, 16, 16, auto_write=False)
+    scene = game_of_life.GameOfLife(display=display)
+    
     def callback(request):
         global scene
         scene = None  # reset to empty as default
@@ -28,7 +29,6 @@ if __name__ == '__main__':
                 print("starting module:", word)
                 scene = module(display=display)
 
-    display = Display(board.GP22, 16, 16, auto_write=False)
     webserver.connect_network()
     webserver.code_callback = callback
 
