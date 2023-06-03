@@ -1,4 +1,3 @@
-import board
 from neopixel import Color
 from time import sleep
 from scene import Scene

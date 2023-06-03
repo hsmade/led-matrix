@@ -6,6 +6,7 @@ import eyes
 import pacman
 import cat
 import FFT
+import defrag
 from neopixel import Display
 import board
 
@@ -18,11 +19,12 @@ if __name__ == '__main__':
         "eyes": eyes.Eyes,
         "pacman": pacman.PacMan,
         "cat": cat.Cat,
-        "test": FFT.FFT,
+        "FFT": FFT.FFT,
+        "defrag": defrag.Defrag,
     }
     display = Display(board.GP22, 16, 16, auto_write=False)
     # scene = game_of_life.GameOfLife(display=display)
-    scene = FFT.FFT(display=display)
+    scene = defrag.Defrag(display=display)
     
     def callback(request):
         global scene
