@@ -11,7 +11,7 @@ UNPROCESSED = Color(0, 255 * BRIGHTNESS, 255 * BRIGHTNESS)  # CYAN
 READ = Color(0, 255 * BRIGHTNESS, 0)  # READ
 WRITE = Color(255 * BRIGHTNESS, 0, 0)  # WRITE
 PROCESSED = Color(0, 0, 250 * BRIGHTNESS)  # BLUE
-ACTION_SLEEP = 0.1
+ACTION_SLEEP = 0.2
 
 
 class Defrag(Scene):
@@ -66,10 +66,10 @@ class Defrag(Scene):
         offset = 1
         while True:
             if self.position - offset == 0:  # we're at the start
-                print("found {} empty spaces before".format(offset))
+                # print("found {} empty spaces before".format(offset))
                 return offset
             if self.data[self.position - offset] != 0:  # end of empty blocks
-                print("found {} empty spaces before".format(offset))
+                # print("found {} empty spaces before".format(offset))
                 return offset - 1  # current offset isn't empty
             offset += 1
 
@@ -78,11 +78,11 @@ class Defrag(Scene):
         # fixme: index out of bounds on self.data
         while self.data[pos + offset] != 0:
             offset += 1
-        print("found empty space at {}".format(pos + offset))
+        # print("found empty space at {}".format(pos + offset))
         return pos + offset
 
     def read(self, pos):
-        print("read pos {}".format(pos))
+        # print("read pos {}".format(pos))
         self.data[pos] = 0
         x, y = self.get_location_from_pos(pos)
         self._display.set_pixel(x, y, READ)
@@ -92,7 +92,7 @@ class Defrag(Scene):
         self._display.draw()
 
     def write(self, pos, file_number):
-        print("write pos {}".format(pos))
+        # print("write pos {}".format(pos))
         self.data[pos] = file_number
         x, y = self.get_location_from_pos(pos)
         self._display.set_pixel(x, y, WRITE)
@@ -102,49 +102,51 @@ class Defrag(Scene):
         self._display.draw()
 
     def mark_as_done(self, pos):
-        print("mark pos {}".format(pos))
+        # print("mark pos {}".format(pos))
         x, y = self.get_location_from_pos(pos)
         self._display.set_pixel(x, y, PROCESSED)
         self._display.draw()
-        sleep(ACTION_SLEEP)
+        sleep(ACTION_SLEEP/2)
 
     def iter(self):
+        display_size = self._display.height * self._display.width
+
         # if defrag is done
-        if self.position > self._display.height * self._display.width:
-            print("prefill")
+        if self.position == display_size:
+            # print("prefill")
             self.prefill()
             self.position = 0
 
         if self.data[self.position] == 0:
-            print("skip empty pos {}".format(self.position))
+            # print("skip empty pos {}".format(self.position))
             self.position += 1
             return
 
         current_file = self.data[self.position]
-        print("working on file {} at pos {} with size {}".format(current_file, self.position, self.file_sizes[current_file]))
+        # print("working on file {} at pos {} with size {}".format(current_file, self.position, self.file_sizes[current_file]))
         # create empty space
         empty_before = self.number_of_empty_before()
         size_needed = self.file_sizes[current_file] - empty_before
-        print("need {} empty space".format(size_needed))
+        # print("need {} empty space".format(size_needed))
         # free up space in front of us
         for offset in range(0, size_needed):
             test_pos = self.position + offset
             if self.data[test_pos] != 0:
-                print("moving block at pos {}".format(test_pos))
+                # print("moving block at pos {}".format(test_pos))
                 empty_space = self.find_empty_space_after(self.position + size_needed)
                 file_number = self.data[test_pos]
                 self.read(test_pos)
                 self.write(empty_space, file_number)
-            else:
-                print("space is already empty at pos {}".format(self.position + offset))
+            # else:
+            #     print("space is already empty at pos {}".format(self.position + offset))
 
         # find all blocks for file and write them to the now empty space
-        print("write file number {}".format(current_file))
+        # print("write file number {}".format(current_file))
         offset = 0
         empty_offset = 0 - empty_before  # set to start of empty space
         written = 0
-        while written < self.file_sizes[current_file]:
-            if self.data[self.position + offset] == current_file:  # found a block  ## FIXME: index out of bounds
+        while written < self.file_sizes[current_file] and self.position + offset < display_size:
+            if self.data[self.position + offset] == current_file:  # found a block
                 self.read(self.position + offset)
                 self.write(self.position + empty_offset, current_file)
                 self.data[self.position + empty_offset] = current_file
@@ -153,11 +155,11 @@ class Defrag(Scene):
             offset += 1
 
         # advance forward to end of file
-        print("move forward {}".format(size_needed))
-        print("loop from offset {} to {}".format(0 - empty_before, self.file_sizes[current_file] - empty_before))
+        # print("move forward {}".format(size_needed))
+        # print("loop from offset {} to {}".format(0 - empty_before, self.file_sizes[current_file] - empty_before))
         orig_pos = self.position
         for offset in range(0 - empty_before, self.file_sizes[current_file] - empty_before):
-            print("at offset {}".format(offset))
+            # print("at offset {}".format(offset))
             self.position = orig_pos + offset
             self.mark_as_done(self.position)
 
