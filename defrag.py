@@ -161,7 +161,8 @@ class Defrag(Scene):
         for offset in range(0 - empty_before, self.file_sizes[current_file] - empty_before):
             # print("at offset {}".format(offset))
             self.position = orig_pos + offset
-            self.mark_as_done(self.position)
+            if self.data[self.position] != 0:
+                self.mark_as_done(self.position)
 
         # next block
         self.position += 1
