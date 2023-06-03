@@ -48,6 +48,7 @@ def webpage():
     <html>
     <body>
     <ul>
+        <li><form method="POST"><input name="FFT" type="hidden"/><button type="submit">FFT</button></form></li>
         <li><form method="POST"><input name="game" type="hidden"/><button type="submit">game</button></form></li>
         <li><form method="POST"><input name="pong" type="hidden"/><button type="submit">pong</button></form></li>
         <li><form method="POST"><input name="mario" type="hidden"/><button type="submit">mario</button></form></li>

@@ -1,3 +1,4 @@
+import board
 from neopixel import Color
 from time import sleep
 from scene import Scene
@@ -7,6 +8,8 @@ EYE = Color(32, 32, 0)
 SKIN = Color(0, 20, 32)
 BROWN = Color(0, 0, 16)
 NOSE = Color(14, 0, 0)
+# SKIN = Color(48, 32, 0)
+# BROWN = Color(28, 16, 0)
 NONE = Color(0, 0, 0)
 
 FRAME1 = [
