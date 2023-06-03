@@ -39,7 +39,7 @@ fft_size = 256  # 256  # Sample size for Fourier transform, MUST be power of two
 spectrum_size = fft_size // 2  # Output spectrum is 1/2 of FFT result
 # Bottom of spectrum tends to be noisy, while top often exceeds musical
 # range and is just harmonics, so clip both ends off:
-low_bin = 3  # fft_size(256) -> 172 Hz
+low_bin = 4 #3  # fft_size(256) -> 172 Hz
 high_bin = 75  # fft_size(256) -> 12920 Hz
 
 display_width = 16
@@ -51,7 +51,7 @@ display_height = 16
 # The tables also help visually linearize the output so octaves are evenly
 # spaced, as on a piano keyboard, whereas the source spectrum data is
 # spaced by frequency in Hz.
-column_table = []
+column_table = list()
 spectrum_bits = log(spectrum_size, 2)  # e.g. 7 for 128-bin spectrum
 # Scale low_bin and high_bin to 0.0 to 1.0 equivalent range in spectrum
 low_frac = log(low_bin, 2) / spectrum_bits
@@ -112,11 +112,11 @@ for column in range(display_width):
     ])
     # print("mem free after column_table update:", mem_free())
 
-# print(column_table)
+print(column_table)
 
 
 class FFT(Scene):
-    dynamic_level = 14
+    dynamic_level = 16
     frames, start_time = 0, monotonic()
 
     def iter(self):
@@ -188,10 +188,10 @@ class FFT(Scene):
             if int(element[3]) > display_height - 1:
                 element[3] = display_height - 1
             # Draw peak dot
-            # self._display.set_pixel(column, int(element[3]), Color(0xE0, 0x80, 0x80))
+            self._display.set_pixel(column, int(element[3]), Color(0xE0, 0x80, 0x80))
 
-            self._display.draw()
-            self.frames += 1
-            # print(self.frames / (monotonic() - self.start_time), "FPS")
+        self._display.draw()
+        self.frames += 1
+        # print(self.frames / (monotonic() - self.start_time), "FPS")
 
         # sleep(1)

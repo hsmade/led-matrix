@@ -23,9 +23,9 @@ if __name__ == '__main__':
         "defrag": defrag.Defrag,
     }
     display = Display(board.GP22, 16, 16, auto_write=False)
-    # scene = game_of_life.GameOfLife(display=display)
-    scene = defrag.Defrag(display=display)
-    
+    # scene = defrag.Defrag(display=display)
+    scene = FFT.FFT(display=display)
+
     def callback(request):
         global scene
         scene = None  # reset to empty as default

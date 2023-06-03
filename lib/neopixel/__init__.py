@@ -159,6 +159,9 @@ class Display:
         self.__pixels._sm.deinit()
 
     def set_pixel(self, x: int, y: int, color: Color):
+        if x > self.width - 1 or y > self.height - 1 or x < 0 or y < 0:
+            print("Attempting to set out of bounds pixel at {},{}".format(x, y))
+            return
         self.__buffer[x][y] = color
         if x % 2:
             # print("!set x:", x, "y:", y, "index:", (self.height - y) + x * self.height, "to:", color.get())
