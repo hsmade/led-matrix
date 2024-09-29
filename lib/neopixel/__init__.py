@@ -155,8 +155,16 @@ class Display:
         self.__pixels = NeoPixelBackground(pin, width * height, brightness=0.1, auto_write=auto_write)
         self.__buffer = [[Color(0, 0, 0)] * width for _ in range(height)]
 
+    @property
+    def auto_write(self):
+        return self.__auto_write
+
     def stop(self):
         self.__pixels._sm.deinit()
+
+    def __setitem__(self, index, val):
+        color = Color(val[0], val[1], val[2])
+        self.set_pixel(index % self.width, index // self.width, color)
 
     def set_pixel(self, x: int, y: int, color: Color):
         if x > self.width - 1 or y > self.height - 1 or x < 0 or y < 0:
@@ -169,6 +177,9 @@ class Display:
         else:
             # print("set x:", x, "y:", y, "index:", x + y * self.width, "to:", color.get())
             self.__pixels[y + x * self.height] = color.get()
+
+    def show(self):
+        self.__pixels.show()
 
     def draw(self):
         self.__pixels.show()

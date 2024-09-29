@@ -7,6 +7,7 @@ import pacman
 import cat
 import FFT
 import defrag
+import tetris
 from neopixel import Display
 import board
 
@@ -21,10 +22,11 @@ if __name__ == '__main__':
         "cat": cat.Cat,
         "FFT": FFT.FFT,
         "defrag": defrag.Defrag,
+        "tetris": tetris.Tetris,
     }
     display = Display(board.GP22, 16, 16, auto_write=False)
     # scene = defrag.Defrag(display=display)
-    scene = FFT.FFT(display=display)
+    scene = tetris.Tetris(display=display)
 
     def callback(request):
         global scene
