@@ -143,7 +143,7 @@ class Tetris(Scene):
         self._display.clear()
         self.occupied = [[False] * 16 for _ in range(16)]
         self.pick_brick()
-        self.brick.move(8, 8) # FIXME was dy:1
+        self.brick.move(8, -1)
         self.game_over = False
 
     def occupied_brick(self, brick):
@@ -206,4 +206,4 @@ class Tetris(Scene):
         # self.remove_full_lines()
         self.brick.draw()
         self._framebuf.display()
-        # sleep(2)
+        sleep(0.5)
